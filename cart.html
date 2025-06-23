@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a> |
+        <a href="shop.html">Shop</a> |
+        <a href="cart.html">Cart</a> |
+        <a href="settings.html">Settings</a> |
+        <a href="payment.html">Payment</a> |
+        <a href="login.html">Login / Register</a>
+    </nav>
+    <section class="container">
+        <h1>Shopping Cart</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="cart-items">
+                <!-- Cart items will be displayed here -->
+            </tbody>
+        </table>
+        <p id="cart-total"></p>
+        <button onclick="goToPayment()">Proceed to Payment</button>
+    </section>
+    <script>
+    console.log("Cart script started! (Loaded at " + new Date().toLocaleString() + ")");
+
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function renderCart() {
+        const cartItems = document.getElementById('cart-items');
+        cartItems.innerHTML = '';
+        let total = 0;
+
+        if (cart.length === 0) {
+            cartItems.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px;">السلة فارغة.</td></tr>';
+            document.getElementById('cart-total').textContent = `Total: $0.00`;
+            return;
+        }
+
+        cart.forEach((item) => {
+            const row = document.createElement('tr');
+            const quantity = item.quantity || 0;
+            const price = item.price || 0;
+            const itemTotal = price * quantity;
+            total += itemTotal;
+
+            row.innerHTML = `
+                <td>
+                    <div>
+                        <span>${item.name}</span><br>
+                        <small>$${price.toFixed(2)} لكل قطعة</small>
+                    </div>
+                </td>
+                <td>
+                    <button data-id="${item.id}" data-action="decrease">-</button>
+                    <span>${quantity}</span>
+                    <button data-id="${item.id}" data-action="increase">+</button>
+                </td>
+                <td>$${itemTotal.toFixed(2)}</td>
+                <td><button data-id="${item.id}" class="remove-item-btn">Remove</button></td>
+            `;
+
+            row.querySelector('[data-action="decrease"]').onclick = () => updateQuantity(item.id, -1);
+            row.querySelector('[data-action="increase"]').onclick = () => updateQuantity(item.id, 1);
+            row.querySelector('.remove-item-btn').onclick = () => {
+                if (confirm("هل أنت متأكد أنك تريد حذف هذا المنتج؟")) {
+                    removeItem(item.id);
+                }
+            };
+
+            cartItems.appendChild(row);
+        });
+
+        document.getElementById('cart-total').textContent = `Total: $${total.toFixed(2)}`;
+    }
+
+    function updateQuantity(id, change) {
+        const index = cart.findIndex(item => item.id === id);
+        if (index > -1) {
+            cart[index].quantity += change;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+        }
+    }
+
+    function removeItem(id) {
+        cart = cart.filter(item => item.id !== id);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+    }
+
+    function goToPayment() {
+        window.location.href = "payment.html";
+    }
+
+    renderCart();
+    </script>
+
+</body>
+</html>
